@@ -21,6 +21,10 @@ gapminder <- read.csv("data/gapminder-FiveYearData.csv", header=TRUE)
 > * To be able to skip and remove elements from various data structures.
 >
 
+Often, we only want to work with one part of a data set for a given analysis.
+For example, we might want to focus on countries that meet certain criteria
+in our data analysis.
+
 R has many powerful subset operators and mastering them will allow you to
 easily perform complex operations on any kind of dataset.
 
@@ -36,9 +40,9 @@ x
 ```
 
 So now that we've created a dummy vector to play with, how do we get at its
-contents?
+contents?  There are many good options.
 
-## Accessing elements using their indices
+## Accessing elements using their indices (integers)
 
 To extract elements of a vector we can give their corresponding index, starting
 from one:
@@ -52,36 +56,43 @@ x[4]
 ```
 
 The square brackets operator is just like any other function. For atomic vectors
-(and matrices), it means "get me the nth element".
+(and matrices), it means "get me these element(s)".
 
-We can ask for multiple elements at once:
+We can ask for multiple elements at once, in any order:
 
 ```{r}
-x[c(1, 3)]
+x[c(3, 1)]
 ```
 
-Or slices of the vector:
+Or, we can use the `:` operator to conveniently extract sequences of adjacent
+elements.  This operator fills in the sequence between two numbers so you don't
+have to type all of them out. For example, `1:4` expands to the same value as 
+`c(1, 2, 3, 4)`
 
 ```{r}
+c(1, 2, 3, 4)
+1:4
+```
+
+```{r}
+x[c(1, 2, 3, 4)]
 x[1:4]
 ```
-
-the `:` operator just creates a sequence of numbers from the left element to the right.
-I.e. `x[1:4]` is equivalent to `x[c(1,2,3,4)]`.
 
 We can ask for the same element multiple times:
 
 ```{r}
-x[c(1,1,3)]
+x[c(1,3, 1)]
 ```
 
-If we ask for a number outside of the vector, R will return missing values:
+If we ask for a number outside of the vector, R will flag it as missing (`NA`):
 
 ```{r}
-x[6]
+x[c(6, 1)]
 ```
 
-This is a vector of length one containing an `NA`, whose name is also `NA`.
+The sixth element doesn't exist, and doesn't have a name, so its name and value 
+are both `NA`.
 
 If we ask for the 0th element, we get an empty vector:
 
@@ -102,7 +113,6 @@ every element *except* for the one specified:
 ```{r}
 x[-2]
 ```
-
 
 We can skip multiple elements:
 
