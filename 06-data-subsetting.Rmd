@@ -31,16 +31,16 @@ easily perform complex operations on any kind of dataset.
 There are six different ways we can subset any kind of object, and three
 different subsetting operators for the different data structures.
 
-Let's start with the workhorse of R: atomic vectors.
+Let's start with a small vector from gapminder data set used in the last 
+section. This part of the data was selected using R's subsetting features.
 
 ```{r}
-x <- c(5.4, 6.2, 7.1, 4.8, 7.5)
-names(x) <- c('a', 'b', 'c', 'd', 'e')
-x
+lifeExp <- c(Afghanistan = 43.8, Bahrain = 75.6, Cambodia = 59.7, 
+             Denmark = 78.3, Ecuador = 75.0)
 ```
 
-So now that we've created a dummy vector to play with, how do we get at its
-contents?  There are many good options.
+To keep the example clear, the first letter of these countries' names match 
+the first five letters of the alphabet.
 
 ## Accessing elements using their indices (integers)
 
@@ -48,20 +48,25 @@ To extract elements of a vector we can give their corresponding index, starting
 from one:
 
 ```{r}
-x[1]
+lifeExp[1]
 ```
 
 ```{r}
-x[4]
+lifeExp[4]
 ```
 
 The square brackets operator is just like any other function. For atomic vectors
 (and matrices), it means "get me these element(s)".
 
+> ##Vector numbering in R starts at 1 {.callout} 
+> 
+> In many programming languages (C and python, for example), the first
+> element of a vector has an index of 0. In R, the first element is 1.
+
 We can ask for multiple elements at once, in any order:
 
 ```{r}
-x[c(3, 1)]
+lifeExp[c(3, 1)]
 ```
 
 Or, we can use the `:` operator to conveniently extract sequences of adjacent
@@ -70,25 +75,21 @@ have to type all of them out. For example, `2:4` expands to the same value as
 `c(2, 3, 4)`
 
 ```{r}
-c(2, 3, 4)
 2:4
-```
 
-```{r}
-x[c(2, 3, 4)]
-x[2:4]
+lifeExp[2:4]
 ```
 
 We can ask for the same element multiple times:
 
 ```{r}
-x[c(1, 3, 1)]
+lifeExp[c(1, 3, 1)]
 ```
 
 If we ask for a number outside of the vector, R will flag it as missing (`NA`):
 
 ```{r}
-x[c(6, 1)]
+lifeExp[c(6, 1)]
 ```
 
 The sixth element doesn't exist, and doesn't have a name, so its name and value 
@@ -97,27 +98,20 @@ are both `NA`.
 If we ask for the 0th element, we get an empty vector:
 
 ```{r}
-x[0]
+lifeExp[0]
 ```
 
-> ##Vector numbering in R starts at 1 {.callout} 
-> 
-> In many programming languages (C and python, for example), the first
-> element of a vector has an index of 0. In R, the first element is 1.
-
-## Skipping and removing elements
-
-If we use a negative number as the index of a vector, R will return
-every element *except* for the one specified:
+If we ask for a negative element, R gives us everything *except* for that 
+element:
 
 ```{r}
-x[-2]
+lifeExp[-4]
 ```
 
 We can skip multiple elements:
 
 ```{r}
-x[c(-1, -5)]  # or x[-c(1,5)]
+lifeExp[c(-1, -5)]  # or lifeExp[-c(1,5)]
 ```
 
 > ## Tip: Order of operations {.callout}
@@ -127,7 +121,7 @@ x[c(-1, -5)]  # or x[-c(1,5)]
 > sequence like so:
 >
 > ```{r, error=TRUE}
-> x[-1:3]
+> lifeExp[-1:3]
 > ```
 >
 > This gives a somewhat cryptic error:
@@ -140,16 +134,18 @@ x[c(-1, -5)]  # or x[-c(1,5)]
 > that the `-` operator applies to the results:
 >
 > ```{r}
-> x[-(1:3)]
+> lifeExp[-(1:3)]
 > ```
 >
 
-To remove elements from a vector, we need to assign the results back
-into the variable:
+To remove elements from a vector, we can use negative indices and then 
+assign the results back into the variable.
 
 ```{r}
-x <- x[-4]
-x
+lifeExp[-4]
+
+lifeExp <- lifeExp[-4]
+lifeExp
 ```
 
 > ## Challenge 1 {.challenge}
@@ -171,19 +167,127 @@ x
 > 2. Compare notes with your neighbour. Did you have different strategies?
 >
 
+## Subsetting based on other criteria
+
+If we want to find all the countries with life expectancies longer than 60 years,
+we can start with a test using `>`:
+
+```{r}
+lifeExp > 60
+```
+
+When we use logical vectors (`TRUE`s and `FALSE`s) for subsetting, R finds all
+the `TRUE` elements and returns them to us.
+
+```{r}
+lifeExp[lifeExp > 60]
+```
+
+In English, one could read this code as "the elements of `lifeExp` where 
+`lifeExp` is greater than 60."
+
+If we just want the names of the selected countries, instead of their life 
+expectancies, we can use `names`:
+
+```{r}
+names(lifeExp[lifeExp > 60])
+```
+
+The logical vector used for subsetting can come from anywhere, not just from
+`lifeExp`:
+
+```{r}
+is_in_Asia <- c(Afghanistan = TRUE, Bahrain = TRUE, Cambodia = TRUE, 
+                Ecuador = FALSE)
+
+lifeExp[is_in_Asia]
+```
+
+This gives us the life expectancies for Asian countries only. This could be
+useful if we wanted to compare life expectancies across continents.
+
+Be careful, though: subsetting based on logical vectors is based on position,
+not name.  If the logical indexes are in the wrong order, you might not get the
+elements you expected:
+
+```{r}
+is_in_Asia_wrong_order <- c(Ecuador = FALSE, Afghanistan = TRUE, Bahrain = TRUE, 
+                Cambodia = TRUE)
+
+lifeExp[is_in_Asia_wrong_order]
+```
+
+R ignored the names and gave us the second, third, and fourth elements of 
+`lifeExp`, because those were the ones that were `TRUE`.
+
+> ## Tip: Combining logical operations {.callout}
+>
+> There are many situations in which you will wish to combine multiple conditions.
+> To do so several logical operations exist in R:
+>
+>  * `|` logical OR: returns `TRUE`, if either the left or right are `TRUE`.
+>  * `&` logical AND: returns `TRUE` if both the left and right are `TRUE`
+>
+> The recycling rule applies with both of these, so `TRUE & c(TRUE, FALSE, TRUE)` 
+> will compare the first `TRUE` on the left with each of the conditions on the 
+> right. 
+>
+>  * `!` logical NOT: converts `TRUE` to `FALSE` and `FALSE` to `TRUE`. It can 
+>     go in front of a single condition (eg `!TRUE` becomes `FALSE`), or before 
+>     a whole vector of conditions and convert all its elements (eg `!c(TRUE, 
+>     FALSE)` becomes `c(FALSE, TRUE)`).
+>  * `&&` and `||` compare **only** the first element of two vectors and ignore 
+>    the remaining elements. They're mainly used in programming, rather than 
+>    data analysis.
+>
+> Additionally, you can evaluate the elements within a single vector using the 
+> `all` function (which returns `TRUE` if every element of the vector is `TRUE`) 
+> and the `any` function (which returns `TRUE` if one or more elements of the 
+> vector are `TRUE`).
+>
+> Combining logical tests with these operations can lead to very precise 
+> subsetting, e.g. finding all the European countries with life expectancies over
+> 65.
+
+
+
+> ## Challenge 2 {.challenge}
+>
+> Given the following code:
+>
+> ```{r}
+> x <- c(5.4, 6.2, 7.1, 4.8, 7.5)
+> names(x) <- c('a', 'b', 'c', 'd', 'e')
+> print(x)
+> ```
+>
+> 1. Write a subsetting command to return the values in x that are greater than 4 and less than 7.
+>
+
 ## Subsetting by name
+
+
 
 We can extract elements by using their name, instead of index:
 
 ```{r}
-x[c("a", "c")]
+lifeExp["Afghanistan"]
 ```
 
-This is usually a much more reliable way to subset objects: the
-position of various elements can often change when chaining together
-subsetting operations, but the names will always remain the same!
+Just like before, we can select multiple elements, in any order we want:
 
-Unfortunately we can't skip or remove elements so easily.
+```{r}
+lifeExp[c("Cambodia", "Afghanistan")]
+```
+
+Selecting by name is usually a much more reliable way to subset objects: the
+position of various elements can often change, but the names should stay 
+attached to the right element.  For example, the fourth element
+of `lifeExp` originally belonged to Denmark, but when we deleted it in the 
+previous section, Ecuador moved up to the fourth slot, along with its name.
+
+Unfortunately we can't skip or remove elements by name as easily as we can with
+numbers.
 
 To skip (or remove) a single named element:
 
@@ -210,8 +314,6 @@ first name is "a" so that element is TRUE.
 which(names(x) == "a")
 ```
 
-
-
 Only the first element is `TRUE`, so `which` returns 1. Now that we have indices
 the skipping works because we have a negative index!
 
@@ -225,7 +327,7 @@ x[-which(names(x) %in% c("a", "c"))]
 The `%in%` goes through each element of its left argument, in this case the
 names of `x`, and asks, "Does this element occur in the second argument?".
 
-> ## Challenge 2 {.challenge}
+> ## Challenge 3 {.challenge}
 >
 > Run the following code to define vector `x` as above:
 >
@@ -314,63 +416,6 @@ names(x) == c('a', 'c', 'e')
 
 This difference between `==` and `%in%` is important to remember,
 because it can introduce hard to find and subtle bugs!
-
-## Subsetting through other logical operations
-
-We can also more simply subset through logical operations:
-
-```{r}
-x[c(TRUE, TRUE, FALSE, FALSE)]
-```
-
-Note that in this case, the logical vector is also recycled to the
-length of the vector we're subsetting!
-
-```{r}
-x[c(TRUE, FALSE)]
-```
-
-Since comparison operators evaluate to logical vectors, we can also
-use them to succinctly subset vectors:
-
-```{r}
-x[x > 7]
-```
-
-> ## Tip: Logical operations {.callout}
->
-> There are many situations in which you will wish to combine multiple conditions.
-> To do so several logical operations exist in R:
->
->  * `|` logical OR: returns `TRUE`, if either the left or right are `TRUE`.
->  * `&` logical AND: returns `TRUE` if both the left and right are `TRUE`
->
-> The recycling rule applies with both of these, so `TRUE & c(TRUE, FALSE, TRUE)` 
-> will compare the first `TRUE` on the left with each of the conditions on the 
-> right. 
->
->  * `!` logical NOT: converts `TRUE` to `FALSE` and `FALSE` to `TRUE`. It can go before
->    a single condition (eg `!TRUE` becomes `FALSE`), or before a whole vector of conditions and convert
->    each element (eg `!c(TRUE, FALSE)` becomes `c(FALSE, TRUE)`).
->  * `&&` and `||` compare **only** the first element of two vectors and ignore the 
->    remaining elements.
->
-> Additionally, you can compare the elements within a single vector using the `all` function
-> (which returns `TRUE` if every element of the vector is `TRUE`) and the `any` function
-> (which returns `TRUE` if one or more elements of the vector are `TRUE`).
-
-> ## Challenge 3 {.challenge}
->
-> Given the following code:
->
-> ```{r}
-> x <- c(5.4, 6.2, 7.1, 4.8, 7.5)
-> names(x) <- c('a', 'b', 'c', 'd', 'e')
-> print(x)
-> ```
->
-> 1. Write a subsetting command to return the values in x that are greater than 4 and less than 7.
->
 
 ## Handling special values
 
@@ -693,7 +738,7 @@ be changed with the third argument, `drop = FALSE`).
 >
 
 
-> ## Solution to challenge 2 {.challenge}
+> ## Solution to challenge 3 {.challenge}
 >
 > Run the following code to define vector `x` as above:
 >
